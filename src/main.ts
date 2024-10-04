@@ -1,24 +1,40 @@
-import './style.css'
-import typescriptLogo from './typescript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.ts'
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.min.css';
+import './css/index.css';
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-    </a>
-    <h1>Vite + TypeScript</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite and TypeScript logos to learn more
-    </p>
-  </div>
-`
+import UserService, { User } from './services/UserService.ts';
+import Profile from './components/Profile.ts';
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+const service = new UserService();
+
+const profiles = document.querySelector("#profiles");
+const addUserButton = document.querySelector('.control-add-user');
+
+/**
+ * Handler for fetching a new user / profile and adding to the profile list.
+ */
+addUserButton?.addEventListener('click', async (_e) => {
+  const user = await service.get() as User; 
+  const profileElement = Profile(user);
+  profiles?.append(profileElement);
+});
+
+/**
+ * Generic event handler to handle clicks within the profile list.
+ */
+profiles?.addEventListener('click', (e) => {
+  const target: Element = (e.target as Element);
+  // Follow
+  if (target?.classList.contains('js-profile-follow')) {
+    const element = target?.closest('.profile') as HTMLElement;
+    const existingUser = JSON.parse(element?.dataset?.user || '{}');
+    const updatedUser = { ...existingUser, followers: [ ...existingUser.followers, 'another' ] };
+    const updatedElement = Profile(updatedUser);
+    element.replaceWith(updatedElement);
+  }
+  // Delete
+  if (target?.classList.contains('js-profile-delete')) {
+    const element = target.closest('.profile') as HTMLElement;
+    element.remove();
+  }
+});
